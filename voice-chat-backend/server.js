@@ -25,25 +25,30 @@ const s3 = new aws.S3();
 const upload = multer({
   storage: multerS3({
     s3: s3,
-    bucket: process.env.AWS_S3_BUCKET,  // Define el nombre de tu bucket en el archivo .env
-    acl: 'public-read',                // Permite acceso público al archivo (ajusta según tu necesidad)
+    bucket: process.env.AWS_S3_BUCKET,
+    //acl: 'public-read',
     key: function (req, file, cb) {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      const fileName = file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname);
-      cb(null, fileName);  // Guarda el archivo con un nombre único
+      // Genera un nombre único usando la fecha actual y un número aleatorio
+      const uniqueSuffix = Date.now() + '-' + Math.floor(Math.random() * 1e9);  // Asegura que sea único
+      const fileName = `audio-voz-${uniqueSuffix}${path.extname(file.originalname)}`;  // Nombre único basado en la fecha y aleatoriedad
+      console.log(`Nombre del archivo S3: ${fileName}`);  // Verifica el nombre generado
+      cb(null, fileName);  // Asigna este nombre como la clave en S3
     },
   }),
 });
 
-// Endpoint para subir la nota de voz a S3
-app.post('/upload', upload.single('audio'), (req, res) => {
-  if (!req.file) {
+
+
+// Endpoint para subir múltiples notas de voz a S3
+app.post('/upload', upload.array('audio', 10), (req, res) => { // Cambia 10 al número máximo de archivos que deseas permitir
+  if (!req.files || req.files.length === 0) {
     return res.status(400).json({ message: 'No se ha subido ningún archivo' });
   }
-  
-  console.log('Archivo subido a S3:', req.file);
-  // La propiedad `location` contiene la URL pública del archivo subido
-  res.json({ message: 'Archivo subido exitosamente', fileLocation: req.file.location });
+
+  console.log('Archivos subidos a S3:', req.files);
+  // La propiedad `location` contiene la URL pública de cada archivo subido
+  const fileLocations = req.files.map(file => file.location);
+  res.json({ message: 'Archivos subidos exitosamente', fileLocations });
 });
 
 // Inicia el servidor

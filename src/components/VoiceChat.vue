@@ -83,8 +83,11 @@ export default {
         alert("No se ha grabado ningún audio.");
         return;
       }
+      const uniqueSuffix = Date.now() + '-' + Math.floor(Math.random() * 1e9);
+      const fileName = `audio-voz-${uniqueSuffix}.webm`;  // El nombre del archivo será único cada vez
 
-      const archivo = new File([this.audioBlob], "audio-voz.webm", { type: "audio/webm" });
+
+      const archivo = new File([this.audioBlob], fileName, { type: "audio/webm" });
 
       AWS.config.update({
         accessKeyId: 'AKIARU2QHV2A6ANPTSYI',  // Sustituye con tu Access Key ID
