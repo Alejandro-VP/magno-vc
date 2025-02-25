@@ -9,10 +9,11 @@ const path = require('path');
 require('dotenv').config(); // Para cargar variables de entorno
 
 // Crea la aplicación Express y el servidor HTTP
+const http = require('http');
 const app = express();
 const server = http.createServer(app);
+const socketIo = require('socket.io');
 const io = socketIo(server); // Inicializa Socket.io con el servidor HTTP
-
 // Configuración de AWS (asegúrate de tener el archivo .env en Render)
 aws.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -64,5 +65,5 @@ io.on('connection', (socket) => {
 // Iniciar servidor en el puerto asignado por Render
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
+  console.log(`Servidor ejecutándose en ${PORT}`);
 });

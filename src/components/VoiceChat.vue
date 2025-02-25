@@ -5,10 +5,7 @@
       <button @click="startRecording" :disabled="isRecording">Iniciar Grabación</button>
       <button @click="stopRecording" :disabled="!isRecording">Detener Grabación</button>
     </div>
-    <div v-if="audioUrl" class="audio-preview">
-      <h3>Nota de Voz:</h3>
-      <audio :src="audioUrl" controls></audio>
-    </div>
+  
     <div v-if="audioUrl" class="audio-preview">
       <h3>Nota de Voz:</h3>
       <audio :src="audioUrl" controls></audio>
@@ -98,6 +95,7 @@ export default {
 
     sendMessage() {
       // Envía el mensaje al servidor
+      console.log("Enviando mensaje:", this.message);
       this.socket.emit('send-message', this.message);
       this.message = '';  // Limpiar campo de mensaje
     },
