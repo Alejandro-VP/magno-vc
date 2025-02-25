@@ -1,13 +1,13 @@
 <template>
   <div class="voice-chat">
-    <h2>Chat de Notas de Voz</h2>
+    <h2>Chat en Tiempo Real</h2>
     <div class="controls">
-      <button @click="startRecording" :disabled="isRecording">
-        Iniciar Grabación
-      </button>
-      <button @click="stopRecording" :disabled="!isRecording">
-        Detener Grabación
-      </button>
+      <button @click="startRecording" :disabled="isRecording">Iniciar Grabación</button>
+      <button @click="stopRecording" :disabled="!isRecording">Detener Grabación</button>
+    </div>
+    <div v-if="audioUrl" class="audio-preview">
+      <h3>Nota de Voz:</h3>
+      <audio :src="audioUrl" controls></audio>
     </div>
     <div v-if="audioUrl" class="audio-preview">
       <h3>Nota de Voz:</h3>
@@ -16,12 +16,19 @@
         Enviar
       </button>
     </div>
+    <div class="chat-box">
+      <div v-for="(msg, index) in messages" :key="index">{{ msg }}</div>
+    </div>
+
+    <input v-model="message" placeholder="Escribe un mensaje..." />
+    <button @click="sendMessage">Enviar Mensaje</button>
   </div>
+
 </template>
 
 <script>
 //import AWS from 'aws-sdk/dist/aws-sdk-react-native'; // Asegúrate de importar AWS SDK correctamente
-
+import { io } from 'socket.io-client';
 export default {
   name: "VoiceChat",
   data() {
@@ -30,8 +37,19 @@ export default {
       mediaRecorder: null,
       recordedChunks: [],
       audioUrl: null,
-      audioBlob: null,  // Guardamos el Blob aquí para usarlo después
+      message: '',
+      messages: [],  // Array para almacenar los mensajes
+      socket: null,   // Socket.io instance
     };
+  },
+  mounted() {
+    // Conectar al servidor Socket.io en Render
+    this.socket = io('https://magno-vc.onrender.com');  // Cambia esta URL a tu dominio de Render
+
+    // Escuchar los mensajes entrantes
+    this.socket.on('receive-message', (message) => {
+      this.messages.push(message);
+    });
   },
   methods: {
     async startRecording() {
@@ -75,6 +93,13 @@ export default {
         this.mediaRecorder.stop();
         this.isRecording = false;
       }
+    },
+
+
+    sendMessage() {
+      // Envía el mensaje al servidor
+      this.socket.emit('send-message', this.message);
+      this.message = '';  // Limpiar campo de mensaje
     },
 
     // Método para subir el audio al bucket de S3
