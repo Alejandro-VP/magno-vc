@@ -79,8 +79,8 @@ export default {
       const archivo = new File([blob], "audio-voz.webm", { type: "audio/webm" });
 
       AWS.config.update({
-        accessKeyId: 'TU_ACCESS_KEY_ID',  // Sustituye con tu Access Key ID
-        secretAccessKey: 'TU_SECRET_ACCESS_KEY', // Sustituye con tu Secret Access Key
+        accessKeyId: 'AKIARU2QHV2A6ANPTSYI',  // Sustituye con tu Access Key ID
+        secretAccessKey: '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', // Sustituye con tu Secret Access Key
         region: 'eu-north-1',  // Cambia la región si es necesario
       });
 
