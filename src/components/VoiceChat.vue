@@ -40,8 +40,7 @@ export default {
       audioUrl: null,
       audioBlob: null, // ✅ Ahora está definido
       message: "",
-      messages: [],
-      socket: null,
+      messages: []
     };
   },
 
@@ -136,7 +135,7 @@ export default {
 
         // ❌ Eliminado: this.socket.emit('new_voice_message')
         // El backend debe emitir el mensaje cuando el archivo esté listo
-
+        this.socket.emit("new_voice_message", { audioUrl: data.fileLocation });
         this.messages.push({ type: "audio", content: data.fileLocation });
       } catch (error) {
         console.error("❌ Error al subir el archivo:", error);
