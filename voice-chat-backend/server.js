@@ -6,22 +6,17 @@ const aws = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const path = require('path');
-require('dotenv').config(); // Para cargar variables de entorno
-
-// Crea la aplicación Express y el servidor HTTP
+require('dotenv').config();
 
 const app = express();
-
-app.use(express.static(path.join(__dirname, '../dist')));
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, '../dist', 'index.html')); // Enviar el archivo index.html
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+  },
 });
 
-
-const io = socketIo(http);
-const server = http.createServer(app);
-// Inicializa Socket.io con el servidor HTTP
-// Configuración de AWS (asegúrate de tener el archivo .env en Render)
+// Configuración de AWS S3
 aws.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -30,11 +25,10 @@ aws.config.update({
 
 const s3 = new aws.S3();
 
-// Configuración de CORS
 app.use(cors());
 app.use(express.json());
 
-/* Configuración de Multer para manejar las subidas de archivos
+// Configuración de Multer para S3
 const upload = multer({
   storage: multerS3({
     s3: s3,
@@ -42,88 +36,46 @@ const upload = multer({
     acl: 'public-read',
     key: (req, file, cb) => {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      const fileName = 'audio-voz-' + uniqueSuffix + path.extname(file.originalname);
-      cb(null, fileName);
+      cb(null, 'audio-voz-' + uniqueSuffix + path.extname(file.originalname));
     },
   }),
 });
 
-// Endpoint para subir el archivo
+// Ruta para subir archivos
 app.post('/upload', upload.single('audio'), (req, res) => {
-  console.log('Archivo subido:', req.file);
-  res.json({ message: 'Archivo subido exitosamente', fileLocation: req.file.location });
-});
-*/
-
-const storage = multerS3({
-  s3: s3,
-  bucket: process.env.AWS_S3_BUCKET,
-  acl: 'public-read',
-  key: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const fileName = 'audio-voz-' + uniqueSuffix + path.extname(file.originalname);
-    cb(null, fileName);
-  },
-});
-const upload = multer({ storage: storage });
-
-app.post('/upload', upload.single('audio'), (req, res) => {
-  console.log('Archivo recibido:', req.file);
-
-  const params = {
-    Bucket: 'mi-bucket-voice-chat', // Nombre de tu bucket
-    Key: req.file.filename,
-    Body: req.file.buffer,
-    ContentType: req.file.mimetype,
-    ACL: 'public-read',
-  };
-
-  s3.upload(params, (err, data) => {
-    if (err) {
-      return res.status(500).send('Error al subir archivo');
-    }
-
-    // Emitir el mensaje de voz a todos los clientes conectados
-    io.emit('new_voice_message', { audioUrl: data.Location });
-
-    // Responder con éxito
-    res.status(200).send({ message: 'Archivo subido exitosamente', fileLocation: data.Location });
-  });
-
-
   if (req.file) {
-    const fileUrl = req.file.location; // URL del archivo subido a S3
-    console.log('Archivo subido con éxito:', fileUrl);
-
-    // Emitir el mensaje de voz a todos los clientes conectados a través de WebSocket
-    io.emit('new_voice_message', { audioUrl: fileUrl });
-
-    return res.status(200).json({ message: 'Archivo subido exitosamente', fileLocation: fileUrl });
+    console.log('Archivo subido:', req.file);
+    io.emit('new_voice_message', { audioUrl: req.file.location });
+    res.status(200).json({ message: 'Archivo subido exitosamente', fileLocation: req.file.location });
   } else {
-    return res.status(400).json({ message: 'No se pudo subir el archivo' });
+    res.status(400).json({ message: 'No se pudo subir el archivo' });
   }
 });
 
-
-
-
-// Establecer conexión de WebSocket
+// WebSockets
 io.on('connection', (socket) => {
   console.log('Nuevo cliente conectado');
 
-  // Escuchar mensaje del cliente y retransmitirlo a todos los usuarios
-  socket.on('send-message' || 'new_voice_message', (message) => {
-    socket.broadcast.emit('new_voice_message' || 'send-message', data);
+  socket.on('send-message', (message) => {
+    io.emit('send-message', message);
   });
 
-  // Escuchar desconexión
+  socket.on('new_voice_message', (data) => {
+    io.emit('new_voice_message', data);
+  });
+
   socket.on('disconnect', () => {
     console.log('Cliente desconectado');
   });
 });
 
+// 🚀 Rutas estáticas (Mover al final para evitar bloquear otras rutas)
+app.use(express.static(path.join(__dirname, '../dist')));
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../dist', 'index.html'));
+});
 
-// Iniciar servidor en el puerto asignado por Render
+// Iniciar el servidor
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Servidor ejecutándose en ${PORT}`);

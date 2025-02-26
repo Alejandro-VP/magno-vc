@@ -24,6 +24,10 @@
 <script>
 //import AWS from 'aws-sdk/dist/aws-sdk-react-native'; // Asegúrate de importar AWS SDK correctamente
 import { io } from 'socket.io-client';
+const socket = io("https://magno-vc.onrender.com", {
+  transports: ["websocket"],
+});
+
 export default {
   name: "VoiceChat",
   data() {
