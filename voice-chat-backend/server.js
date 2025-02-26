@@ -1,4 +1,5 @@
 const express = require('express');
+const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const aws = require('aws-sdk');
@@ -16,7 +17,7 @@ app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, '../dist', 'index.html')); // Enviar el archivo index.html
 });
 
-const http = require('http').Server(app);
+
 const io = socketIo(http);
 const server = http.createServer(app);
 // Inicializa Socket.io con el servidor HTTP
