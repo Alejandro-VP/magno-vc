@@ -55,20 +55,32 @@ app.post('/upload', upload.single('audio'), (req, res) => {
 });
 */
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
+const storage = multerS3({
+  s3: s3,
+  bucket: process.env.AWS_S3_BUCKET,
+  acl: 'public-read',
+  key: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
+    const fileName = 'audio-voz-' + uniqueSuffix + path.extname(file.originalname);
+    cb(null, fileName);
+  },
 });
 const upload = multer({ storage: storage });
 
 app.post('/upload', upload.single('audio'), (req, res) => {
-  console.log('Archivo subido:', req.file);
-  res.json({ message: 'Archivo subido exitosamente', fileLocation: req.file.location });
+  console.log('Archivo recibido:', req.file);
+
+  if (req.file) {
+    const fileUrl = req.file.location; // URL del archivo subido a S3
+    console.log('Archivo subido con éxito:', fileUrl);
+
+    // Emitir el mensaje de voz a todos los clientes conectados a través de WebSocket
+    io.emit('new_voice_message', { audioUrl: fileUrl });
+
+    return res.status(200).json({ message: 'Archivo subido exitosamente', fileLocation: fileUrl });
+  } else {
+    return res.status(400).json({ message: 'No se pudo subir el archivo' });
+  }
 });
 
 const params = {
