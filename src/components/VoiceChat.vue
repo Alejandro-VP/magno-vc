@@ -44,21 +44,30 @@ export default {
       socket: null,   // Socket.io instance
     };
   },
+
+  mounted() {
+    // Inicializar el socket y almacenarlo en this.socket
+    this.socket = io('https://magno-vc.onrender.com', { transports: ["websocket", "polling"] });
+
+    this.socket.on('connect', () => {
+      console.log("🔗 Conectado al servidor WebSocket");
+    });
+
+    this.socket.on('disconnect', () => {
+      console.warn("⚠️ Desconectado del servidor WebSocket");
+    });
+
+    // Escuchar eventos
+    this.socket.on('send-message', (message) => {
+      this.messages.push({ type: 'text', content: message });
+    });
+
+    this.socket.on('new_voice_message', (data) => {
+      this.messages.push({ type: 'audio', content: data.audioUrl });
+    });
+  },
   methods: {
 
-    mounted() {
-      this.socket = io('https://magno-vc.onrender.com', { transports: ["websocket", "polling"] });
-
-      // Escuchar mensajes de texto
-      this.socket.on('send-message', (message) => {
-        this.messages.push({ type: 'text', content: message });
-      });
-
-      // Escuchar mensajes de voz
-      this.socket.on('new_voice_message', (data) => {
-        this.messages.push({ type: 'audio', content: data.audioUrl });
-      });
-    },
     async startRecording() {
       // Verifica que el navegador soporte getUserMedia
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
