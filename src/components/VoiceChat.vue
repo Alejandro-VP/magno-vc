@@ -37,17 +37,19 @@ export default {
       socket: null,   // Socket.io instance
     };
   },
-  mounted() {
+  methods: {
+
+    mounted() {
     // Conectar al servidor de WebSockets
-    const socket = io('https://magno-vc.onrender.com'); // Cambia la URL si es necesario
+     this.socket = io('https://magno-vc.onrender.com'); // Cambia la URL si es necesario
 
     // Escuchar el evento 'new_voice_message' desde el servidor
     socket.on('new_voice_message', (data) => {
       console.log('Nuevo mensaje de voz:', data);
       this.messages.push({ id: Date.now(), audioUrl: data.audioUrl });
-    });
+    })
   },
-  methods: {
+  
     async startRecording() {
       // Verifica que el navegador soporte getUserMedia
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -95,8 +97,16 @@ export default {
     sendMessage() {
       // Envía el mensaje al servidor
       console.log("Enviando mensaje:", this.message);
-      this.socket.emit('send-message', this.message);
+      if (this.socket && this.socket.connected) {
+        // Asegúrate de que `this.socket` no sea null
+        this.socket.emit('new_voice_message', { audioUrl: this.audioUrl });
+        this.socket.emit('send-message', this.message);
+      } else {
+        console.error('Socket no está conectado');
+      }
       this.message = '';  // Limpiar campo de mensaje
+
+      
     },
 
     // Método para subir el audio al bucket de S3

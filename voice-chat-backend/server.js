@@ -106,14 +106,14 @@ app.post('/upload', upload.single('audio'), (req, res) => {
 
 
 
-/*
+
 // Establecer conexión de WebSocket
 io.on('connection', (socket) => {
   console.log('Nuevo cliente conectado');
 
   // Escuchar mensaje del cliente y retransmitirlo a todos los usuarios
-  socket.on('send-message', (message) => {
-    io.emit('receive-message', message);  // Envía a todos los clientes conectados
+  socket.on('send-message' || 'new_voice_message', (message) => {
+    socket.broadcast.emit('new_voice_message' || 'send-message', data);
   });
 
   // Escuchar desconexión
@@ -121,7 +121,7 @@ io.on('connection', (socket) => {
     console.log('Cliente desconectado');
   });
 });
-*/
+
 
 // Iniciar servidor en el puerto asignado por Render
 const PORT = process.env.PORT || 3000;
