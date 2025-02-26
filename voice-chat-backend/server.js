@@ -10,11 +10,7 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: "*",
-  },
-});
+const io = socketIo(server);
 
 // Configuración de AWS S3
 aws.config.update({
@@ -56,11 +52,15 @@ app.post('/upload', upload.single('audio'), (req, res) => {
 io.on('connection', (socket) => {
   console.log('Nuevo cliente conectado');
 
+  // Escuchar mensajes de texto
   socket.on('send-message', (message) => {
+    console.log('Mensaje recibido:', message);
     io.emit('send-message', message);
   });
 
+  // Escuchar mensajes de voz
   socket.on('new_voice_message', (data) => {
+    console.log('Nuevo mensaje de voz recibido:', data);
     io.emit('new_voice_message', data);
   });
 
@@ -68,6 +68,7 @@ io.on('connection', (socket) => {
     console.log('Cliente desconectado');
   });
 });
+
 
 // 🚀 Rutas estáticas (Mover al final para evitar bloquear otras rutas)
 app.use(express.static(path.join(__dirname, '../dist')));

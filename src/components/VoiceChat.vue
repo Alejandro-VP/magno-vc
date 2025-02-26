@@ -13,7 +13,10 @@
       </button>
     </div>
     <div class="chat-box">
-      <div v-for="(msg, index) in messages" :key="index">{{ msg }}</div>
+      <div v-for="(msg, index) in messages" :key="index">
+        <span v-if="msg.type === 'text'">{{ msg.content }}</span>
+        <audio v-else-if="msg.type === 'audio'" :src="msg.content" controls></audio>
+      </div>
     </div>
     <input v-model="message" placeholder="Escribe un mensaje..." />
     <button @click="sendMessage">Enviar Mensaje</button>
@@ -44,16 +47,18 @@ export default {
   methods: {
 
     mounted() {
-    // Conectar al servidor de WebSockets
-     this.socket = io('https://magno-vc.onrender.com'); // Cambia la URL si es necesario
+      this.socket = io('https://magno-vc.onrender.com', { transports: ["websocket", "polling"] });
 
-    // Escuchar el evento 'new_voice_message' desde el servidor
-    socket.on('new_voice_message', (data) => {
-      console.log('Nuevo mensaje de voz:', data);
-      this.messages.push({ id: Date.now(), audioUrl: data.audioUrl });
-    })
-  },
-  
+      // Escuchar mensajes de texto
+      this.socket.on('send-message', (message) => {
+        this.messages.push({ type: 'text', content: message });
+      });
+
+      // Escuchar mensajes de voz
+      this.socket.on('new_voice_message', (data) => {
+        this.messages.push({ type: 'audio', content: data.audioUrl });
+      });
+    },
     async startRecording() {
       // Verifica que el navegador soporte getUserMedia
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -99,19 +104,15 @@ export default {
 
 
     sendMessage() {
-      // Envía el mensaje al servidor
-      console.log("Enviando mensaje:", this.message);
-      if (this.socket && this.socket.connected) {
-        // Asegúrate de que `this.socket` no sea null
-        this.socket.emit('new_voice_message', { audioUrl: this.audioUrl });
-        this.socket.emit('send-message', this.message);
-      } else {
-        console.error('Socket no está conectado');
-      }
-      this.message = '';  // Limpiar campo de mensaje
+      if (!this.message.trim()) return;
 
-      
-    },
+      console.log("Enviando mensaje de texto:", this.message);
+      this.socket.emit('send-message', this.message);
+
+      this.messages.push({ type: 'text', content: this.message });
+      this.message = '';  // Limpiar el campo
+    }
+    ,
 
     // Método para subir el audio al bucket de S3
     async uploadAudio() {
@@ -119,36 +120,30 @@ export default {
         alert("No se ha grabado ningún audio.");
         return;
       }
-      const uniqueSuffix = Date.now() + '-' + Math.floor(Math.random() * 1e9);
-      const fileName = `audio-voz-${uniqueSuffix}.webm`;  // El nombre del archivo será único cada vez
 
-
-      const archivo = new File([this.audioBlob], fileName, { type: "audio/webm" });
-
-      AWS.config.update({
-        accessKeyId: 'AKIARU2QHV2A6ANPTSYI',  // Sustituye con tu Access Key ID
-        secretAccessKey: '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', // Sustituye con tu Secret Access Key
-        region: 'eu-north-1',  // Cambia la región si es necesario
-      });
-
-      const s3 = new AWS.S3();
-
-      const params = {
-        Bucket: 'mi-bucket-voice-chat',  // Reemplaza con el nombre de tu bucket
-        Key: archivo.name,  // El nombre del archivo en S3
-        Body: archivo,  // El contenido del archivo
-        ContentType: archivo.type,  // El tipo de archivo
-        //ACL: 'public-read',  // Permisos (opcional, depende de tus necesidades)
-      };
+      const formData = new FormData();
+      formData.append('audio', this.audioBlob, `audio-${Date.now()}.webm`);
 
       try {
-        // Usar el método .promise() para manejar la subida de manera asíncrona
-        const data = await s3.upload(params).promise();
-        console.log("Archivo subido exitosamente:", data);
+        const response = await fetch('https://magno-vc.onrender.com/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+        console.log("Archivo subido con éxito:", data);
+
+        // Emitir el mensaje de voz al servidor WebSocket
+        this.socket.emit('new_voice_message', { audioUrl: data.fileLocation });
+
+        // Agregar el mensaje de voz a la lista de mensajes del chat
+        this.messages.push({ type: 'audio', content: data.fileLocation });
+
       } catch (error) {
         console.error("Error al subir el archivo:", error);
       }
     }
+
   }
 };
 </script>
