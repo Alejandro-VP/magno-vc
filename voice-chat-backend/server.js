@@ -9,10 +9,9 @@ const path = require('path');
 require('dotenv').config(); // Para cargar variables de entorno
 
 // Crea la aplicación Express y el servidor HTTP
-const http = require('http');
+
 const app = express();
 const server = http.createServer(app);
-const socketIo = require('socket.io');
 const io = socketIo(server); // Inicializa Socket.io con el servidor HTTP
 // Configuración de AWS (asegúrate de tener el archivo .env en Render)
 aws.config.update({

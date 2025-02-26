@@ -41,7 +41,7 @@ export default {
   },
   mounted() {
     // Conectar al servidor Socket.io en Render
-    this.socket = io('https://magno-vc.onrender.com');  // Cambia esta URL a tu dominio de Render
+    this.socket = io('wss://magno-vc.onrender.com');  // Cambia esta URL a tu dominio de Render
 
     // Escuchar los mensajes entrantes
     this.socket.on('receive-message', (message) => {

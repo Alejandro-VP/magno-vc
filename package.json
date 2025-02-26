@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint . --fix",
     "format": "prettier --write src/",
-    "start": "node server.js"
+    "start": "node voice-chat-backend/server.js"
   },
   "dependencies": {
     "axios": "^1.7.9",
