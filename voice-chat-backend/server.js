@@ -11,12 +11,12 @@ require('dotenv').config(); // Para cargar variables de entorno
 // Crea la aplicación Express y el servidor HTTP
 
 const app = express();
-/*
- app.use(express.static(path.join(__dirname, 'dist')));
+
+app.use(express.static(path.join(__dirname, '../dist')));
 app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'dist', 'index.html')); // Enviar el archivo index.html
+  res.sendFile(path.resolve(__dirname, '../dist', 'index.html')); // Enviar el archivo index.html
 });
-*/
+
 const server = http.createServer(app);
 const io = socketIo(server); // Inicializa Socket.io con el servidor HTTP
 // Configuración de AWS (asegúrate de tener el archivo .env en Render)
