@@ -17,8 +17,10 @@ app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, '../dist', 'index.html')); // Enviar el archivo index.html
 });
 
+const http = require('http').Server(app);
+const io = socketIo(http);
 const server = http.createServer(app);
-const io = socketIo(server); // Inicializa Socket.io con el servidor HTTP
+// Inicializa Socket.io con el servidor HTTP
 // Configuración de AWS (asegúrate de tener el archivo .env en Render)
 aws.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -32,7 +34,7 @@ const s3 = new aws.S3();
 app.use(cors());
 app.use(express.json());
 
-// Configuración de Multer para manejar las subidas de archivos
+/* Configuración de Multer para manejar las subidas de archivos
 const upload = multer({
   storage: multerS3({
     s3: s3,
@@ -51,7 +53,46 @@ app.post('/upload', upload.single('audio'), (req, res) => {
   console.log('Archivo subido:', req.file);
   res.json({ message: 'Archivo subido exitosamente', fileLocation: req.file.location });
 });
+*/
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage: storage });
+
+app.post('/upload', upload.single('audio'), (req, res) => {
+  console.log('Archivo subido:', req.file);
+  res.json({ message: 'Archivo subido exitosamente', fileLocation: req.file.location });
+});
+
+const params = {
+  Bucket: 'mi-bucket-voice-chat', // Nombre de tu bucket
+  Key: req.file.filename,
+  Body: req.file.buffer,
+  ContentType: req.file.mimetype,
+  ACL: 'public-read',
+};
+
+s3.upload(params, (err, data) => {
+  if (err) {
+    return res.status(500).send('Error al subir archivo');
+  }
+
+  // Emitir el mensaje de voz a todos los clientes conectados
+  io.emit('new_voice_message', { audioUrl: data.Location });
+
+  // Responder con éxito
+  res.status(200).send({ message: 'Archivo subido exitosamente', fileLocation: data.Location });
+});
+
+
+/*
 // Establecer conexión de WebSocket
 io.on('connection', (socket) => {
   console.log('Nuevo cliente conectado');
@@ -66,6 +107,7 @@ io.on('connection', (socket) => {
     console.log('Cliente desconectado');
   });
 });
+*/
 
 // Iniciar servidor en el puerto asignado por Render
 const PORT = process.env.PORT || 3000;

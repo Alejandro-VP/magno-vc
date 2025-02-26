@@ -5,7 +5,6 @@
       <button @click="startRecording" :disabled="isRecording">Iniciar Grabación</button>
       <button @click="stopRecording" :disabled="!isRecording">Detener Grabación</button>
     </div>
-  
     <div v-if="audioUrl" class="audio-preview">
       <h3>Nota de Voz:</h3>
       <audio :src="audioUrl" controls></audio>
@@ -16,7 +15,6 @@
     <div class="chat-box">
       <div v-for="(msg, index) in messages" :key="index">{{ msg }}</div>
     </div>
-
     <input v-model="message" placeholder="Escribe un mensaje..." />
     <button @click="sendMessage">Enviar Mensaje</button>
   </div>
@@ -40,12 +38,13 @@ export default {
     };
   },
   mounted() {
-    // Conectar al servidor Socket.io en Render
-    this.socket = io('wss://magno-vc.onrender.com');  // Cambia esta URL a tu dominio de Render
+    // Conectar al servidor de WebSockets
+    const socket = io('https://magno-vc.onrender.com'); // Cambia la URL si es necesario
 
-    // Escuchar los mensajes entrantes
-    this.socket.on('receive-message', (message) => {
-      this.messages.push(message);
+    // Escuchar el evento 'new_voice_message' desde el servidor
+    socket.on('new_voice_message', (data) => {
+      console.log('Nuevo mensaje de voz:', data);
+      this.messages.push({ id: Date.now(), audioUrl: data.audioUrl });
     });
   },
   methods: {
