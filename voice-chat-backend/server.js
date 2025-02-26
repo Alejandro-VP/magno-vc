@@ -70,6 +70,27 @@ const upload = multer({ storage: storage });
 app.post('/upload', upload.single('audio'), (req, res) => {
   console.log('Archivo recibido:', req.file);
 
+  const params = {
+    Bucket: 'mi-bucket-voice-chat', // Nombre de tu bucket
+    Key: req.file.filename,
+    Body: req.file.buffer,
+    ContentType: req.file.mimetype,
+    ACL: 'public-read',
+  };
+
+  s3.upload(params, (err, data) => {
+    if (err) {
+      return res.status(500).send('Error al subir archivo');
+    }
+
+    // Emitir el mensaje de voz a todos los clientes conectados
+    io.emit('new_voice_message', { audioUrl: data.Location });
+
+    // Responder con éxito
+    res.status(200).send({ message: 'Archivo subido exitosamente', fileLocation: data.Location });
+  });
+
+
   if (req.file) {
     const fileUrl = req.file.location; // URL del archivo subido a S3
     console.log('Archivo subido con éxito:', fileUrl);
@@ -83,25 +104,6 @@ app.post('/upload', upload.single('audio'), (req, res) => {
   }
 });
 
-const params = {
-  Bucket: 'mi-bucket-voice-chat', // Nombre de tu bucket
-  Key: req.file.filename,
-  Body: req.file.buffer,
-  ContentType: req.file.mimetype,
-  ACL: 'public-read',
-};
-
-s3.upload(params, (err, data) => {
-  if (err) {
-    return res.status(500).send('Error al subir archivo');
-  }
-
-  // Emitir el mensaje de voz a todos los clientes conectados
-  io.emit('new_voice_message', { audioUrl: data.Location });
-
-  // Responder con éxito
-  res.status(200).send({ message: 'Archivo subido exitosamente', fileLocation: data.Location });
-});
 
 
 /*
