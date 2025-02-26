@@ -44,7 +44,7 @@ app.post('/upload', upload.single('audio'), (req, res) => {
     io.emit('new_voice_message', { audioUrl: req.file.location });
     res.status(200).json({ message: 'Archivo subido exitosamente', fileLocation: req.file.location });
   } else {
-    res.status(400).json({ message: 'No se pudo subir el archivo' });
+    return res.status(400).json({ message: 'No se pudo subir el archivo' });
   }
 });
 

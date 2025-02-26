@@ -25,8 +25,7 @@
 </template>
 
 <script>
-//import AWS from 'aws-sdk/dist/aws-sdk-react-native'; // Asegúrate de importar AWS SDK correctamente
-import { io } from 'socket.io-client';
+import { io } from "socket.io-client";
 const socket = io("https://magno-vc.onrender.com", {
   transports: ["websocket"],
 });
@@ -39,66 +38,61 @@ export default {
       mediaRecorder: null,
       recordedChunks: [],
       audioUrl: null,
-      message: '',
-      messages: [],  // Array para almacenar los mensajes
-      socket: null,   // Socket.io instance
+      audioBlob: null, // ✅ Ahora está definido
+      message: "",
+      messages: [],
+      socket: null,
     };
   },
 
   mounted() {
-    // Inicializar el socket y almacenarlo en this.socket
-    this.socket = io('https://magno-vc.onrender.com', { transports: ["websocket", "polling"] });
+    this.socket = io("https://magno-vc.onrender.com", {
+      transports: ["websocket", "polling"],
+    });
 
-    this.socket.on('connect', () => {
+    this.socket.on("connect", () => {
       console.log("🔗 Conectado al servidor WebSocket");
     });
 
-    this.socket.on('disconnect', () => {
+    this.socket.on("disconnect", () => {
       console.warn("⚠️ Desconectado del servidor WebSocket");
     });
 
-    // Escuchar eventos
-    this.socket.on('send-message', (message) => {
-      this.messages.push({ type: 'text', content: message });
+    this.socket.on("send-message", (message) => {
+      this.messages.push({ type: "text", content: message });
     });
 
-    this.socket.on('new_voice_message', (data) => {
-      this.messages.push({ type: 'audio', content: data.audioUrl });
+    this.socket.on("new_voice_message", (data) => {
+      this.messages.push({ type: "audio", content: data.audioUrl });
     });
   },
-  methods: {
 
+  methods: {
     async startRecording() {
-      // Verifica que el navegador soporte getUserMedia
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         alert("Tu navegador no soporta la grabación de audio.");
         return;
       }
 
       try {
-        // Solicita permiso para usar el micrófono
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        // Crea una instancia de MediaRecorder con el stream de audio
         this.mediaRecorder = new MediaRecorder(stream);
-        // Reinicia los chunks grabados
         this.recordedChunks = [];
-        // Inicia la grabación
-        this.mediaRecorder.start();
         this.isRecording = true;
 
-        // Almacena los datos disponibles conforme se graba
         this.mediaRecorder.ondataavailable = (event) => {
           if (event.data.size > 0) {
             this.recordedChunks.push(event.data);
           }
         };
 
-        // Cuando se detiene la grabación, crea un Blob con los datos y genera una URL
         this.mediaRecorder.onstop = () => {
           const blob = new Blob(this.recordedChunks, { type: "audio/webm" });
           this.audioUrl = URL.createObjectURL(blob);
-          this.audioBlob = blob;  // Guardamos el blob para enviarlo luego
+          this.audioBlob = blob; // ✅ Ahora está bien definido
         };
+
+        this.mediaRecorder.start();
       } catch (error) {
         console.error("Error al acceder al micrófono:", error);
       }
@@ -111,19 +105,13 @@ export default {
       }
     },
 
-
     sendMessage() {
       if (!this.message.trim()) return;
+      this.socket.emit("send-message", this.message);
+      this.messages.push({ type: "text", content: this.message });
+      this.message = "";
+    },
 
-      console.log("Enviando mensaje de texto:", this.message);
-      this.socket.emit('send-message', this.message);
-
-      this.messages.push({ type: 'text', content: this.message });
-      this.message = '';  // Limpiar el campo
-    }
-    ,
-
-    // Método para subir el audio al bucket de S3
     async uploadAudio() {
       if (!this.audioBlob) {
         alert("No se ha grabado ningún audio.");
@@ -131,31 +119,33 @@ export default {
       }
 
       const formData = new FormData();
-      formData.append('audio', this.audioBlob, `audio-${Date.now()}.webm`);
+      formData.append("audio", this.audioBlob, `audio-${Date.now()}.webm`);
 
       try {
-        const response = await fetch('https://magno-vc.onrender.com/upload', {
-          method: 'POST',
-          body: formData
+        const response = await fetch("https://magno-vc.onrender.com/upload", {
+          method: "POST",
+          body: formData,
         });
 
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
-        console.log("Archivo subido con éxito:", data);
+        console.log("✅ Archivo subido con éxito:", data);
 
-        // Emitir el mensaje de voz al servidor WebSocket
-        this.socket.emit('new_voice_message', { audioUrl: data.fileLocation });
+        // ❌ Eliminado: this.socket.emit('new_voice_message')
+        // El backend debe emitir el mensaje cuando el archivo esté listo
 
-        // Agregar el mensaje de voz a la lista de mensajes del chat
-        this.messages.push({ type: 'audio', content: data.fileLocation });
-
+        this.messages.push({ type: "audio", content: data.fileLocation });
       } catch (error) {
-        console.error("Error al subir el archivo:", error);
+        console.error("❌ Error al subir el archivo:", error);
       }
-    }
-
-  }
+    },
+  },
 };
 </script>
+
 
 <style scoped>
 button {
