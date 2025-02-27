@@ -12,14 +12,17 @@
     <button @click="sendMessage">Enviar Mensaje</button>
     <div class="controls">
       <button @click="startRecording" :disabled="isRecording">Iniciar Grabación</button>
-      <button v-if="isRecording" @click="stopRecording" :disabled="!isRecording">Detener Grabación</button>
+      <div v-if="isRecording">
+        <button @click="stopRecording" :disabled="!isRecording">Detener Grabación</button>
+        <div v-if="audioUrl" class="audio-preview">
+          <h3>Nota de Voz:</h3>
+          <audio :src="audioUrl" controls></audio>
+        </div>
+      </div>
       <button @click="uploadAudio">
         Enviar
       </button>
-      <div v-if="audioUrl" class="audio-preview">
-        <h3>Nota de Voz:</h3>
-        <audio :src="audioUrl" controls></audio>
-      </div>
+
     </div>
   </div>
 
