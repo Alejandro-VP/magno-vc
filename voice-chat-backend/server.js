@@ -6,7 +6,6 @@ const multer = require('multer');
 const path = require('path');
 require('dotenv').config();
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
