@@ -18,7 +18,7 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
   .then(() => console.log("Conectado a MongoDB"))
   .catch(err => console.error("Error al conectar a MongoDB:", err));
 
-const authRoutes = require('./routes/auth');
+const authRoutes = require('../routes/auth.js');
 app.use('/api/auth', authRoutes);
 
 // 🚀 Configuración de AWS S3
