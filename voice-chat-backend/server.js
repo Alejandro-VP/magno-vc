@@ -13,6 +13,7 @@ const io = socketIo(server);
 
 app.use(cors());
 app.use(express.json());
+/*
 
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("Conectado a MongoDB"))
@@ -20,7 +21,7 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
 
 const authRoutes = require('../routes/auth.js');
 app.use('/api/auth', authRoutes);
-
+*/
 // 🚀 Configuración de AWS S3
 const s3 = new S3Client({
   region: process.env.AWS_REGION || "us-east-1", // ⚠️ Usa la región de tu bucket
