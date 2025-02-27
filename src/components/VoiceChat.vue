@@ -3,14 +3,12 @@
     <h2>Chat en Tiempo Real</h2>
     <div class="controls">
       <button @click="startRecording" :disabled="isRecording">Iniciar Grabación</button>
-      <button @click="stopRecording" :disabled="!isRecording">Detener Grabación</button>
+      <button v-if="isRecording" @click="stopRecording" :disabled="!isRecording">Detener Grabación</button>
     </div>
     <div v-if="audioUrl" class="audio-preview">
       <h3>Nota de Voz:</h3>
       <audio :src="audioUrl" controls></audio>
-      <button @click="uploadAudio">
-        Enviar
-      </button>
+
     </div>
     <div class="chat-box">
       <div v-for="(msg, index) in messages" :key="index">
@@ -18,8 +16,11 @@
         <audio v-else-if="msg.type === 'audio'" :src="msg.content" controls></audio>
       </div>
     </div>
-    <input v-model="message" placeholder="Escribe un mensaje..." />
-    <button @click="sendMessage">Enviar Mensaje</button>
+    <div class="button-group">
+      <input v-model="message" placeholder="Escribe un mensaje..." />
+      <button @click="sendMessage">Enviar Mensaje</button>
+      <button v-if="audioUrl" @click="uploadAudio">🎤 Enviar Audio</button>
+    </div>
   </div>
 
 </template>
