@@ -1,27 +1,23 @@
-<script setup>
-
-</script>
-
 <template>
-  <div>
-    <h1>¡Bienvenido al chat de notas de voz!</h1>
-
-    <VoiceChat />
+  <div id="app">
+    <!-- Aquí se cargará el componente correspondiente según la ruta -->
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-import VoiceChat from './components/VoiceChat.vue';
-
 export default {
-  components: {
-    VoiceChat,
-  },
+  name: "App"
 };
 </script>
 
 <style>
-div {
+/* Puedes agregar estilos globales aquí */
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-align: center;
+  color: #2c3e50;
 }
 </style>

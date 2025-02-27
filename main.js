@@ -1,12 +1,11 @@
+// src/main.js
 import Vue from 'vue';
-import VoiceChat from './src/components/VoiceChat.vue';
-import { createApp } from 'vue';
 import App from './App.vue';
+import router from './router';
 
-createApp(App).mount('#app');
+Vue.config.productionTip = false;
 
-/*
 new Vue({
-render: (h) => h(VoiceChat),
+    router,
+    render: h => h(App)
 }).$mount('#app');
-*/
