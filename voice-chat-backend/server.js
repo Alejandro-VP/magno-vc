@@ -35,8 +35,7 @@ async function uploadToS3(fileBuffer, fileName, mimeType) {
     Bucket: process.env.AWS_S3_BUCKET,  // ⚠️ Usa tu variable de entorno
     Key: fileName,
     Body: fileBuffer,
-    ContentType: mimeType || "audio/webm",
-    ACL: "public-read",
+    ContentType: mimeType || "audio/webm", // ⚠️ Cambia el tipo MIME si es necesario
   };
 
   try {
