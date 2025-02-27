@@ -6,7 +6,7 @@ const multer = require('multer');
 const path = require('path');
 require('dotenv').config();
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
-
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
@@ -36,6 +36,7 @@ async function uploadToS3(fileBuffer, fileName, mimeType) {
     Key: fileName,
     Body: fileBuffer,
     ContentType: mimeType || "audio/webm", // ⚠️ Cambia el tipo MIME si es necesario
+    ACL: "public-read", // Permite leer
   };
 
   try {

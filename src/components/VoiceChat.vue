@@ -133,7 +133,7 @@ export default {
 
         // ❌ Eliminado: this.socket.emit('new_voice_message')
         // El backend debe emitir el mensaje cuando el archivo esté listo
-        this.socket.emit("new_voice_message", { audioUrl: data.fileLocation });
+        //this.socket.emit("new_voice_message", { audioUrl: data.fileLocation });
 
       } catch (error) {
         console.error("❌ Error al subir el archivo:", error);
