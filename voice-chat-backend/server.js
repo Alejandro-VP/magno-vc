@@ -4,6 +4,7 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
+const mongoose = require('mongoose');
 require('dotenv').config();
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const app = express();
@@ -12,6 +13,13 @@ const io = socketIo(server);
 
 app.use(cors());
 app.use(express.json());
+
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("Conectado a MongoDB"))
+  .catch(err => console.error("Error al conectar a MongoDB:", err));
+
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
 
 // 🚀 Configuración de AWS S3
 const s3 = new S3Client({

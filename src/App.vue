@@ -5,6 +5,7 @@
 <template>
   <div>
     <h1>¡Bienvenido al chat de notas de voz!</h1>
+
     <VoiceChat />
   </div>
 </template>
