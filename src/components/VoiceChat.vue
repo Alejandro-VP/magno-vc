@@ -105,7 +105,7 @@ export default {
     sendMessage() {
       if (!this.message.trim()) return;
       this.socket.emit("send-message", this.message);
-      this.messages.push({ type: "text", content: this.message });
+      //this.messages.push({ type: "text", content: this.message });
       this.message = "";
     },
 
