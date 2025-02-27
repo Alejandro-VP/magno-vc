@@ -26,9 +26,7 @@
 
 <script>
 import { io } from "socket.io-client";
-const socket = io("https://magno-vc.onrender.com", {
-  transports: ["websocket"],
-});
+
 
 export default {
   name: "VoiceChat",
@@ -56,11 +54,11 @@ export default {
     this.socket.on("disconnect", () => {
       console.warn("⚠️ Desconectado del servidor WebSocket");
     });
-
+    this.socket.off("send-message");
     this.socket.on("send-message", (message) => {
       this.messages.push({ type: "text", content: message });
     });
-
+    this.socket.off("new_voice_message");
     this.socket.on("new_voice_message", (data) => {
       this.messages.push({ type: "audio", content: data.audioUrl });
     });
@@ -136,7 +134,7 @@ export default {
         // ❌ Eliminado: this.socket.emit('new_voice_message')
         // El backend debe emitir el mensaje cuando el archivo esté listo
         this.socket.emit("new_voice_message", { audioUrl: data.fileLocation });
-        this.messages.push({ type: "audio", content: data.fileLocation });
+
       } catch (error) {
         console.error("❌ Error al subir el archivo:", error);
       }

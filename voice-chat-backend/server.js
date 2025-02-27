@@ -36,6 +36,7 @@ async function uploadToS3(fileBuffer, fileName, mimeType) {
     Key: fileName,
     Body: fileBuffer,
     ContentType: mimeType || "audio/webm",
+    ACL: "public-read",
   };
 
   try {
@@ -97,7 +98,7 @@ app.get('*', (req, res) => {
 // 🚀 Iniciar el servidor
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
+  console.log(`Servidor ejecutándose en ${PORT}`);
 });
 
 // Configuración de Multer para S3
