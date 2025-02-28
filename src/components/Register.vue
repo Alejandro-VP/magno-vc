@@ -1,52 +1,43 @@
+// src/components/Register.vue (ejemplo)
 <template>
-    <div class="register">
+    <div>
         <h2>Registro de Usuario</h2>
-        <input v-model="username" placeholder="Nombre de usuario" />
-        <input v-model="email" placeholder="Correo electrónico" />
+        <input v-model="email" placeholder="Correo" />
         <input v-model="password" type="password" placeholder="Contraseña" />
         <button @click="registerUser">Registrarse</button>
     </div>
 </template>
 
 <script>
-import { auth, db } from "../firebase.js"; // Asegúrate de importar tu configuración
+import { ref } from 'vue';
+import { auth } from '../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 export default {
     name: "Register",
-    data() {
-        return {
-            username: "",
-            email: "",
-            password: ""
-        };
-    },
-    methods: {
-        async registerUser() {
+    setup() {
+        const email = ref("");
+        const password = ref("");
+
+        const registerUser = async () => {
             try {
-                // Crea el usuario en Firebase Authentication
-                const userCredential = await auth.createUserWithEmailAndPassword(this.email, this.password);
-                const user = userCredential.user;
-
-                // Guarda información adicional en la colección "users"
-                await db.collection("users").doc(user.uid).set({
-                    username: this.username,
-                    email: this.email,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                alert("Usuario registrado con éxito");
-                // Redirige al usuario al chat
-                this.$router.push("/chat");
+                // Ahora se usa createUserWithEmailAndPassword(auth, email, password)
+                const userCredential = await createUserWithEmailAndPassword(
+                    auth,
+                    email.value,
+                    password.value
+                );
+                console.log("Usuario creado:", userCredential.user);
             } catch (error) {
-                console.error("Error al registrar usuario:", error);
-                alert(error.message);
+                console.error("Error al registrar:", error);
             }
-        }
+        };
+
+        return {
+            email,
+            password,
+            registerUser
+        };
     }
 };
 </script>
-
-
-<style scoped>
-/* Agrega estilos según tus necesidades */
-</style>
