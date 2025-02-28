@@ -1,22 +1,19 @@
 // src/router.js
-import Vue from 'vue';
-import VueRouter from 'vue-router';
-
-// Importa los componentes
+import { createRouter, createWebHistory } from 'vue-router';
 import Register from './components/Register.vue';
-import VoiceChat from './components/VoiceChat.vue'; // Tu componente principal del chat
-
-Vue.use(VueRouter);
+import VoiceChat from './components/VoiceChat.vue';
 
 const routes = [
     { path: '/register', name: 'Register', component: Register },
-    { path: '/chat', name: 'Chat', component: VoiceChat },
-    { path: '*', redirect: '/register' }  // Redirige a registro si la ruta no coincide
+    { path: '/chat', name: 'VoiceChat', component: VoiceChat },
+    // Redirige a /register si la ruta no existe
+    { path: '/', redirect: '/register' }
 ];
 
-const router = new VueRouter({
-    mode: 'history', // Para URLs limpias
+const router = createRouter({
+    history: createWebHistory(),
     routes
 });
 
 export default router;
+

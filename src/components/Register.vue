@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import { auth, db, firebase } from "../firebase"; // Asegúrate de importar tu configuración
+import { auth, db } from "../firebase.js"; // Asegúrate de importar tu configuración
 
 export default {
     name: "Register",
